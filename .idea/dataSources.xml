@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" hash="2248537163">
+    <data-source source="LOCAL" name="Sqlite (Xerial) - dcs_updates_bot.db" uuid="3fa788ef-8811-448c-bfe4-e67b7fbba359">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:dcs_updates_bot.db</jdbc-url>
+    </data-source>
+  </component>
+</project>
