@@ -86,9 +86,9 @@ class UpdatesBot:
         if len(changes) > 0:
             self.send_messages(changes)
 
-    def send_messages(self, changes):
+    def send_messages(self):
 
-        message = str(changes)
+        message = 'DCS has been updated!\n\nUpdated branches:\n\n---\n\n^(*I am a bot. Unsubscribe. GitHub.*)'
 
         self.r.send_message("santi871", "hello", message)
 
@@ -141,7 +141,7 @@ class UpdatesBot:
         self.db.close()
 
 bot = UpdatesBot()
-bot.watch_messages()
+bot.send_messages()
 bot.closedb()
 
 
