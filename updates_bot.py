@@ -3,6 +3,7 @@ import re
 import praw
 import OAuth2Util
 import sqlite3
+import contextlib
 from time import sleep
 
 class UpdatesBot:
@@ -15,6 +16,8 @@ class UpdatesBot:
         self.db = sqlite3.connect('dcs_updates_bot.db')
         self.cur = self.db.cursor()
 
+        print("Creating tables...")
+
         self.db.execute('''CREATE TABLE IF NOT EXISTS CURVERSION
                            (ID INTEGER PRIMARY KEY AUTOINCREMENT,
                            BRANCH TEXT NOT NULL UNIQUE,
@@ -26,11 +29,13 @@ class UpdatesBot:
 
         self.db.commit()
 
+        print("Fetching url...")
+
         self.url = "http://updates.digitalcombatsimulator.com/"
 
-        data = urllib.urlopen(self.url)
+        with contextlib.closing(urllib.urlopen(self.url)) as data:
 
-        result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
+            result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
 
         self.cur_stable = result[0]
         self.cur_open_beta = result[1]
@@ -49,55 +54,87 @@ class UpdatesBot:
         self.new_open_beta = self.cur_open_beta
         self.new_open_alpha = self.cur_open_alpha
 
+        print("Done starting up.")
+
     def check_website(self):
 
-        changes = []
-        data = urllib.urlopen(self.url)
+        self.db1 = sqlite3.connect('dcs_updates_bot.db')
+        self.cur1 = self.db1.cursor()
 
-        result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
+        while True:
 
-        self.new_stable = result[0]
-        self.new_open_beta = result[1]
-        self.new_open_alpha = result[2]
+            print("Checking website...")
 
-        self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 1''')
-        self.cur_stable = self.cur.fetchone()[3]
+            changes = []
 
-        self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 2''')
-        self.cur_open_beta = self.cur.fetchone()[3]
+            with contextlib.closing(urllib.urlopen(self.url)) as data:
 
-        self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 3''')
-        self.cur_open_alpha = self.cur.fetchone()[3]
+                result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
 
-        if self.new_stable != self.cur_stable:
-            changes.append("Stable")
-            self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
+            self.new_stable = result[0]
+            self.new_open_beta = result[1]
+            self.new_open_alpha = result[2]
 
-        if self.new_open_beta != self.cur_open_beta:
-            changes.append("Open Beta")
-            self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
+            self.cur1.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 1''')
+            self.cur_stable = self.cur1.fetchone()[3]
 
-        if self.new_open_alpha != self.cur_open_alpha:
-            changes.append("Open Alpha")
-            self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
+            self.cur1.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 2''')
+            self.cur_open_beta = self.cur1.fetchone()[3]
 
-        self.db.commit()
+            self.cur1.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 3''')
+            self.cur_open_alpha = self.cur1.fetchone()[3]
 
-        if len(changes) > 0:
-            self.send_messages(changes)
+            if self.new_stable != self.cur_stable:
+                changes.append("Stable")
+                self.cur1.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
 
-    def send_messages(self):
+            if self.new_open_beta != self.cur_open_beta:
+                changes.append("Open Beta")
+                self.cur1.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
 
-        message = 'DCS has been updated!\n\nUpdated branches:\n\n---\n\n^(*I am a bot. Unsubscribe. GitHub.*)'
+            if self.new_open_alpha != self.cur_open_alpha:
+                changes.append("Open Alpha")
+                self.cur1.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
 
-        self.r.send_message("santi871", "hello", message)
+            self.db1.commit()
 
-    def watch_thread(self, thread_id):
+            if len(changes) > 0:
+                self.send_messages(changes)
 
+            sleep(60)
+
+    def send_messages(self, changes):
+
+        print("Sending messages...")
+
+        changes_string = ''
+
+        for item in changes:
+            changes_string = changes_string + '* ' + item + '\n\n'
+
+        message = '#DCS World has been updated!\n\n---\n\n**Updated branches:**\n\n' + changes_string +\
+                  '\n\n[DCS World Updates](http://updates.digitalcombatsimulator.com/) | [Hoggit](https://www.reddit.com/r/hoggit)\n\n---\n\n*I am a bot! [Click and send to unsubscribe](https://www.reddit.com/message/compose?to=DCS_updates_bot&subject=Dear%20DCS%20Updates%20bot&message=unsubscribe) | [Source](https://github.com/Santi871/dcs_updates_bot)*'
+
+        self.cur.execute('''SELECT USER FROM SUBSCRIBERS''')
+        users = self.cur1.fetchall()
+
+        for user in users:
+            self.r.send_message(user[0], "An update for DCS World is out!", message)
+            print("Sent message to: " + user[0] + ". Reason: DCS World update")
+            sleep(2)
+
+    def watch_thread(self):
+
+        self.db2 = sqlite3.connect('dcs_updates_bot.db')
+        self.cur2 = self.db2.cursor()
+
+        thread_id = '4dy94g'
         submission = self.r.get_submission(submission_id=thread_id)
         already_done = []
 
         while True:
+
+            print("Checking thread...")
 
             submission.replace_more_comments(limit=None, threshold=0)
             all_comments = praw.helpers.flatten_tree(submission.comments)
@@ -106,8 +143,11 @@ class UpdatesBot:
                 if comment.body == "subscribe" and comment.permalink not in already_done:
 
                     try:
-                        self.cur.execute('''INSERT INTO SUBSCRIBERS(USER) VALUES(?)''', (str(comment.author),))
-                        self.db.commit()
+                        self.cur2.execute('''INSERT INTO SUBSCRIBERS(USER) VALUES(?)''', (str(comment.author),))
+                        self.db2.commit()
+                        self.r.send_message(str(comment.author), "You have subscribed to DCS updates bot!", 'You have been successfully subscribed to DCS updates bot. You will now receive messages when a branch of DCS World is updated.\n\n---\n\n*I am a bot! [Click and send to unsubscribe](https://www.reddit.com/message/compose?to=DCS_updates_bot&subject=Dear%20DCS%20Updates%20bot&message=unsubscribe) | [Source](https://github.com/Santi871/dcs_updates_bot)*')
+                        print("Sent message to: " + str(comment.author) + ". Reason: subscribed")
+                        sleep(1)
                     except Exception:
                         pass
 
@@ -117,18 +157,24 @@ class UpdatesBot:
 
     def watch_messages(self):
 
-        messages = self.r.get_messages()
+        self.db3 = sqlite3.connect('dcs_updates_bot.db')
+        self.cur3 = self.db3.cursor()
         already_done = []
 
         while True:
 
+            print("Checking messages...")
+            messages = self.r.get_messages()
+
             for message in messages:
 
-                if message.body == "unsubscribe me" and message.id not in already_done:
+                if message.body == "unsubscribe" and message.id not in already_done:
 
                     try:
-                        self.cur.execute('''DELETE FROM SUBSCRIBERS WHERE USER = ?;''', (str(message.author),))
-                        self.db.commit()
+                        self.cur3.execute('''DELETE FROM SUBSCRIBERS WHERE USER = ?;''', (str(message.author),))
+                        self.db3.commit()
+                        message.reply("You have been unsubscribed!")
+                        print("Sent message to: " + str(message.author) + ". Reason: unsubscribed")
                     except Exception:
                         pass
 
@@ -139,10 +185,9 @@ class UpdatesBot:
     def closedb(self):
 
         self.db.close()
-
-bot = UpdatesBot()
-bot.send_messages()
-bot.closedb()
+        self.db1.close()
+        self.db2.close()
+        self.db3.close()
 
 
 
