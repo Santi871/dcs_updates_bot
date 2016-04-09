@@ -196,17 +196,13 @@ class UpdatesBot:
                             self.blacklist.append(str(message.author))
                             message.reply('You have been successfully unsubscribed to DCS updates bot. You will no longer receive messages when a branch of DCS World is updated.\n\n---\n\n*I am a bot! [Source](https://github.com/Santi871/dcs_updates_bot) | [Message my owner](https://www.reddit.com/message/compose?to=Santi871)*')
                             print("Sent message to: " + str(message.author) + ". Reason: unsubscribed")
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            print(e)
 
             except Exception as e:
                 print(e)
 
             sleep(30)
-
-    def closedb(self):
-
-        self.db.close()
 
 
 
