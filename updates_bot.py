@@ -84,7 +84,7 @@ class UpdatesBot:
                 result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
 
             self.new_stable = result[0]
-            self.new_open_beta = 'sd'
+            self.new_open_beta = result[1]
             self.new_open_alpha = result[2]
 
             self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 1''')
@@ -97,15 +97,15 @@ class UpdatesBot:
             self.cur_open_alpha = self.cur.fetchone()[3]
 
             if self.new_stable != self.cur_stable:
-                changes.append("Stable")
+                changes.append("Stable: " + result[0])
                 self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
 
             if self.new_open_beta != self.cur_open_beta:
-                changes.append("Open Beta")
+                changes.append("Open Beta: " + result[1])
                 self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
 
             if self.new_open_alpha != self.cur_open_alpha:
-                changes.append("Open Alpha")
+                changes.append("Open Alpha " + result[2])
                 self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
 
             self.db.commit()
