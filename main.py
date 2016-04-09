@@ -1,7 +1,6 @@
 import updates_bot
 import threading
 import time
-import sqlite3
 
 
 class MyThread(threading.Thread):
