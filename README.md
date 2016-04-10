@@ -1,9 +1,9 @@
-#DCS updates bot
+#DCS Updates bot
 
 DCS Updates bot is a Reddit bot made by **/u/santi871** that notifies subscribers of a new DCS World update via PM as
 it is available for download.
 
-To do so, it reads www.updates.digitalcombatsimulator.com once a minute and stores the different version numbers in a
+To do so, it reads *updates.digitalcombatsimulator.com* once a minute and stores the different version numbers in a
 local SQLite database. When a change is found, it goes through the subscriber list (which is stored in the database)
 and sends a PM to each user entry.
 
