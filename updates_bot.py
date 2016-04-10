@@ -17,6 +17,7 @@ class UpdatesBot:
         self.cur = self.db.cursor()
         self.changes_pending = False
         self.blacklist = []
+        self.init = True
 
         print("Creating tables...")
 
@@ -78,45 +79,47 @@ class UpdatesBot:
 
             print("Checking website...")
 
-            changes = []
+            if not self.changes_pending or self.init:
+                changes = []
+                self.init = False
 
-            with contextlib.closing(urllib.urlopen(self.url)) as data:
+                with contextlib.closing(urllib.urlopen(self.url)) as data:
 
-                result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
+                    result = re.findall(r'\d\.\d\.\d\.\d{5}\.\d{2}', str(data.read()), flags=0)
 
-            self.new_stable = result[0]
-            self.new_open_beta = result[1]
-            self.new_open_alpha = result[2]
+                self.new_stable = result[0]
+                self.new_open_beta = result[1]
+                self.new_open_alpha = result[2]
 
-            self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 1''')
-            self.cur_stable = self.cur.fetchone()[3]
+                self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 1''')
+                self.cur_stable = self.cur.fetchone()[3]
 
-            self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 2''')
-            self.cur_open_beta = self.cur.fetchone()[3]
+                self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 2''')
+                self.cur_open_beta = self.cur.fetchone()[3]
 
-            self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 3''')
-            self.cur_open_alpha = self.cur.fetchone()[3]
+                self.cur.execute('''SELECT rowid, * FROM CURVERSION WHERE id = 3''')
+                self.cur_open_alpha = self.cur.fetchone()[3]
 
-            if self.new_stable != self.cur_stable:
-                changes.append("Stable: " + result[0])
-                self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
+                if self.new_stable != self.cur_stable:
+                    changes.append("Stable: " + result[0])
+                    self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
 
-            if self.new_open_beta != self.cur_open_beta:
-                changes.append("Open Beta: " + result[1])
-                self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
+                if self.new_open_beta != self.cur_open_beta:
+                    changes.append("Open Beta: " + result[1])
+                    self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
 
-            if self.new_open_alpha != self.cur_open_alpha:
-                changes.append("Open Alpha " + result[2])
-                self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
+                if self.new_open_alpha != self.cur_open_alpha:
+                    changes.append("Open Alpha " + result[2])
+                    self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
 
-            self.db.commit()
+                self.db.commit()
 
             if len(changes) > 0 or self.changes_pending:
                 try:
                     self.changes_pending = True
                     self.send_messages(changes)
-                except Exception as e:
-                    print(e)
+                except Exception:
+                    pass
 
             sleep(60)
 
@@ -138,7 +141,6 @@ class UpdatesBot:
         for user in users:
             self.r.send_message(user[0], "An update for DCS World is out!", message)
             print("Sent message to: " + user[0] + ". Reason: DCS World update")
-            sleep(2)
 
         self.changes_pending = False
 
@@ -170,8 +172,8 @@ class UpdatesBot:
 
                         already_done.append(comment.permalink)
 
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
 
             sleep(20)
 
@@ -204,8 +206,8 @@ class UpdatesBot:
                             self.blacklist.append(str(message.author))
                             message.reply('You have been successfully unsubscribed to DCS updates bot. You will no longer receive messages when a branch of DCS World is updated.\n\n---\n\n*I am a bot! [Source](https://github.com/Santi871/dcs_updates_bot) | [Message my owner](https://www.reddit.com/message/compose?to=Santi871)*')
                             print("Sent message to: " + str(message.author) + ". Reason: unsubscribed")
-                        except Exception as e:
-                            print(e)
+                        except Exception:
+                            pass
 
             except Exception as e:
                 print(e)
