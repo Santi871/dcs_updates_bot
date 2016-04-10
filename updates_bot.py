@@ -151,23 +151,27 @@ class UpdatesBot:
 
             print("Checking thread...")
 
-            submission = self.r.get_submission(submission_id=thread_id)
-            all_comments = submission.comments
-            for comment in all_comments:
+            try:
+                submission = self.r.get_submission(submission_id=thread_id)
+                all_comments = submission.comments
+                for comment in all_comments:
 
-                if comment.body == "subscribe" and comment.permalink not in already_done\
-                        and str(comment.author) not in self.blacklist:
+                    if comment.body == "subscribe" and comment.permalink not in already_done\
+                            and str(comment.author) not in self.blacklist:
 
-                    try:
-                        self.cur.execute('''INSERT INTO SUBSCRIBERS(USER) VALUES(?)''', (str(comment.author),))
-                        self.db.commit()
-                        self.r.send_message(str(comment.author), "You have subscribed to DCS updates bot!", 'You have been successfully subscribed to DCS updates bot. You will now receive messages when a branch of DCS World is updated.\n\n---\n\n*I am a bot! [Click and send to unsubscribe](https://www.reddit.com/message/compose?to=DCS_updates_bot&subject=Dear%20DCS%20Updates%20bot&message=unsubscribe) | [Source](https://github.com/Santi871/dcs_updates_bot) | [Message my owner](https://www.reddit.com/message/compose?to=Santi871)*')
-                        print("Sent message to: " + str(comment.author) + ". Reason: subscribed")
-                        sleep(1)
-                    except Exception:
-                        pass
+                        try:
+                            self.cur.execute('''INSERT INTO SUBSCRIBERS(USER) VALUES(?)''', (str(comment.author),))
+                            self.db.commit()
+                            self.r.send_message(str(comment.author), "You have subscribed to DCS updates bot!", 'You have been successfully subscribed to DCS updates bot. You will now receive messages when a branch of DCS World is updated.\n\n---\n\n*I am a bot! [Click and send to unsubscribe](https://www.reddit.com/message/compose?to=DCS_updates_bot&subject=Dear%20DCS%20Updates%20bot&message=unsubscribe) | [Source](https://github.com/Santi871/dcs_updates_bot) | [Message my owner](https://www.reddit.com/message/compose?to=Santi871)*')
+                            print("Sent message to: " + str(comment.author) + ". Reason: subscribed")
+                            sleep(1)
+                        except Exception:
+                            pass
 
-                    already_done.append(comment.permalink)
+                        already_done.append(comment.permalink)
+
+            except Exception as e:
+                print(e)
 
             sleep(20)
 
