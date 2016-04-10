@@ -146,7 +146,7 @@ class UpdatesBot:
 
     def watch_thread(self):
 
-        thread_id = '4dy94g'
+        thread_id = '4e80x7'
         already_done = []
 
         while True:
