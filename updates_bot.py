@@ -13,7 +13,7 @@ class UpdatesBot:
         self.r = praw.Reddit(user_agent='windows:DCS Update Checker v1 (by /u/santi871)')
         self.o = OAuth2Util.OAuth2Util(self.r)
         self.o.refresh(force=True)
-        self.db = sqlite3.connect('dcs_updates_bot.db', check_same_thread=False)
+        self.db = sqlite3.connect('dcs_updates_bot_database.db', check_same_thread=False)
         self.cur = self.db.cursor()
         self.changes_pending = False
         self.blacklist = []
