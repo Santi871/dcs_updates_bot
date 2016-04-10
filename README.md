@@ -20,4 +20,4 @@ so that they are not subscribed again when the bot reads the subscription thread
 These 3 tasks are done on 3 separate threads for stability.
 
 
-For any questions, complaints or suggestions, send a messasge to /u/santi871 on Reddit.
+For any questions, complaints or suggestions, send a message to /u/santi871 on Reddit.
