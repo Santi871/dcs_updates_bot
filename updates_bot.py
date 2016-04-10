@@ -15,6 +15,7 @@ class UpdatesBot:
         self.o.refresh(force=True)
         self.db = sqlite3.connect('dcs_updates_bot.db', check_same_thread=False)
         self.cur = self.db.cursor()
+        self.changes_pending = False
         self.blacklist = []
 
         print("Creating tables...")
@@ -110,8 +111,9 @@ class UpdatesBot:
 
             self.db.commit()
 
-            if len(changes) > 0:
+            if len(changes) > 0 or self.changes_pending:
                 try:
+                    self.changes_pending = True
                     self.send_messages(changes)
                 except Exception as e:
                     print(e)
@@ -137,6 +139,8 @@ class UpdatesBot:
             self.r.send_message(user[0], "An update for DCS World is out!", message)
             print("Sent message to: " + user[0] + ". Reason: DCS World update")
             sleep(2)
+
+        self.changes_pending = False
 
     def watch_thread(self):
 
