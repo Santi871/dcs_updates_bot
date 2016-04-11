@@ -10,6 +10,8 @@ class UpdatesBot:
 
     def __init__(self):
 
+        print("Connecting to reddit...")
+
         self.r = praw.Reddit(user_agent='windows:DCS Update Checker v1 (by /u/santi871)')
         self.o = OAuth2Util.OAuth2Util(self.r)
         self.o.refresh(force=True)
