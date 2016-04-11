@@ -77,7 +77,7 @@ class UpdatesBot:
 
         while True:
 
-            print("Checking website...")
+            #print("Checking website...")
 
             if not self.changes_pending or self.init:
                 changes = []
@@ -103,14 +103,17 @@ class UpdatesBot:
                 if self.new_stable != self.cur_stable:
                     changes.append("Stable: " + result[0])
                     self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 1;''', (result[0],))
+                    print("New stable!")
 
                 if self.new_open_beta != self.cur_open_beta:
                     changes.append("Open Beta: " + result[1])
                     self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 2;''', (result[1],))
+                    print("New open beta!")
 
                 if self.new_open_alpha != self.cur_open_alpha:
                     changes.append("Open Alpha " + result[2])
                     self.cur.execute('''UPDATE CURVERSION SET VERSION = ? WHERE ID = 3;''', (result[2],))
+                    print("New open alpha!")
 
                 self.db.commit()
 
@@ -125,7 +128,7 @@ class UpdatesBot:
 
     def send_messages(self, changes):
 
-        print("Sending messages...")
+        #print("Sending messages...")
 
         changes_string = ''
 
@@ -151,7 +154,7 @@ class UpdatesBot:
 
         while True:
 
-            print("Checking thread...")
+            #print("Checking thread...")
 
             try:
                 submission = self.r.get_submission(submission_id=thread_id)
@@ -189,7 +192,7 @@ class UpdatesBot:
 
         while True:
 
-            print("Checking messages...")
+            #print("Checking messages...")
 
             try:
                 messages = self.r.get_messages()
