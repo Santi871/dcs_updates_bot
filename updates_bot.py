@@ -163,7 +163,7 @@ class UpdatesBot:
                 all_comments = submission.comments
                 for comment in all_comments:
 
-                    if comment.body == "subscribe" and comment.permalink not in already_done\
+                    if comment.body.find("subscribe") != 1 and comment.permalink not in already_done\
                             and str(comment.author) not in self.blacklist:
 
                         try:
